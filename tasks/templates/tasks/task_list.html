@@ -1,0 +1,119 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Lista de Tareas{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Lista de Tareas</h2>
+
+    <!-- Barra de búsqueda y filtros -->
+    <form method="get" action=".">
+        <input type="text" name="q" placeholder="Buscar por título" value="{{ request.GET.q }}">
+        <select name="state">
+            <option value="">Todos los Estados</option>
+            {% for value, label in STATE_CHOICES %}
+                <option value="{{ value }}" {% if request.GET.state == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="priority">
+            <option value="">Todas las Prioridades</option>
+            {% for value, label in PRIORITY_CHOICES %}
+                <option value="{{ value }}" {% if request.GET.priority == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="due_date" value="{{ request.GET.due_date }}">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a href="/tasks/tasks/" class="btn btn-secondary">Limpiar Filtros</a>
+        <a href="{% url 'task_create' %}" class="btn btn-success mb-3">Agregar Tarea</a>
+    </form>
+
+    <!-- Lista de Tareas para pantallas grandes -->
+    <table class="table d-none d-md-table">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+                <th>Prioridad</th>
+                <th>Fecha Límite</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in page_obj %}
+            <tr>
+                <td>{{ task.title }}</td>
+                <td>{{ task.description }}</td>
+                <td>{{ task.get_state_display }}</td>
+                <td>{{ task.get_priority_display }}</td>
+                <td>{{ task.due_date|date:"M d, Y" }}</td>
+                <td>
+                    <a href="{% url 'task_update' task.id %}" class="btn btn-warning">Editar</a>
+                    <a href="{% url 'task_delete' task.id %}" class="btn btn-danger">Eliminar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No hay tareas disponibles.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Tarjetas de Tareas para pantallas pequeñas -->
+    <div class="row d-md-none">
+        {% for task in page_obj %}
+        <div class="col-12 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ task.title }}</h5>
+                    <p class="card-text">{{ task.description }}</p>
+                    <p class="card-text">
+                        <strong>Estado:</strong> {{ task.get_state_display }}<br>
+                        <strong>Prioridad:</strong> {{ task.get_priority_display }}<br>
+                        <strong>Fecha Límite:</strong> {{ task.due_date }}
+                    </p>
+                    <a href="{% url 'task_update' task.id %}" class="btn btn-warning">Editar</a>
+                    <a href="{% url 'task_delete' task.id %}" class="btn btn-danger">Eliminar</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p>No hay tareas disponibles.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginación -->
+    <nav>
+        <ul class="pagination">
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                <a class="page-link" href="?page=1">&laquo; Primera</a>
+            </li>
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                {% if page_obj.has_previous %}
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                {% else %}
+                    <span class="page-link">Anterior</span>
+                {% endif %}
+            </li>
+            
+            <li class="page-item disabled">
+                <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                {% if page_obj.has_next %}
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                {% else %}
+                    <span class="page-link">Siguiente</span>
+                {% endif %}
+            </li>
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+{% endblock %}
